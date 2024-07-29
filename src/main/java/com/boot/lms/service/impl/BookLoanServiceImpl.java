@@ -6,11 +6,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.BookDto;
 import com.boot.lms.dto.BookLoanDto;
 import com.boot.lms.dto.IssuedDateDto;
@@ -18,6 +19,7 @@ import com.boot.lms.entity.BookEntity;
 import com.boot.lms.entity.BookLoanEntity;
 import com.boot.lms.entity.MembershipEntity;
 import com.boot.lms.enums.BookLoanStatusEnum;
+import com.boot.lms.enums.MembershipStatusEnum;
 import com.boot.lms.exception.LmsException;
 import com.boot.lms.exception.UserInputException;
 import com.boot.lms.repository.BookEntityRepository;
@@ -30,16 +32,20 @@ import com.boot.lms.util.ThreadLocalUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class BookLoanServiceImpl implements BookLoanService {
 
-	private final BookLoanEntityRepository bookLoanEntityRepository;
-	private final MembershipEntityRepository membershipEntityRepository;
-	private final BookEntityRepository bookEntityRepository;
-	private final MemberEntityRepository memberEntityRepository;
-	
+	@Autowired
+	private BookLoanEntityRepository bookLoanEntityRepository;
+	@Autowired
+	private MembershipEntityRepository membershipEntityRepository;
+	@Autowired
+	private BookEntityRepository bookEntityRepository;
+	@Autowired
+	private MemberEntityRepository memberEntityRepository;
+
 	@Override
-	public ApiResponse issueBooksLoan(BookLoanDto bookLoanDto) {
+	public ApiResponseDto issueBooksLoan(BookLoanDto bookLoanDto) {
 		Long principalId = (Long) ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		checkCanMemberBorrowBooks(bookLoanDto.getMemberId());
 		checkSelectedBooksAvailableToBorrow(bookLoanDto.getBooks());
@@ -50,21 +56,20 @@ public class BookLoanServiceImpl implements BookLoanService {
 		bookLoanEntity.setModifiedTime(LocalDateTime.now());
 		bookLoanEntity.setLoanStatus(BookLoanStatusEnum.ISSUED);
 		bookLoanEntity.setMember(memberEntityRepository.findByMemberId(bookLoanDto.getMemberId()));
-		List<Long> bookIds = bookLoanDto.getBooks()
-				.stream().map(book -> book.getBookId()).collect(Collectors.toList());
+		List<Long> bookIds = bookLoanDto.getBooks().stream().map(book -> book.getBookId()).collect(Collectors.toList());
 		List<BookEntity> bookEntities = bookEntityRepository.findBooksByBookIds(bookIds);
 		bookLoanEntity.setBooks(bookEntities);
 		bookLoanEntityRepository.save(bookLoanEntity);
-		bookEntities.stream().peek(bookEntity -> bookEntity
-				.setNoOfAvailableCopies(bookEntity.getNoOfAvailableCopies() - 1));
+		bookEntities.stream()
+				.peek(bookEntity -> bookEntity.setNoOfAvailableCopies(bookEntity.getNoOfAvailableCopies() - 1));
 		bookEntityRepository.saveAll(bookEntities);
-		return new ApiResponse("Book(s) issued successfully!", 200);
+		return new ApiResponseDto("Book(s) issued successfully!", 200);
 	}
 
 	@Override
 	public BookLoanDto fetchBookLoanDeatils(Long loanId) {
 		BookLoanEntity bookLoanEntity = bookLoanEntityRepository.findByLoanId(loanId);
-		if(Objects.isNull(bookLoanEntity))	{
+		if (Objects.isNull(bookLoanEntity)) {
 			throw new UserInputException("Invalid book loan id!");
 		}
 		return mapToBkLnDto.apply(bookLoanEntity);
@@ -73,14 +78,13 @@ public class BookLoanServiceImpl implements BookLoanService {
 	@Override
 	public List<BookLoanDto> fetchBookLoansOfAMember(Long memberId) {
 		List<BookLoanDto> bookLoanDtos = null;
-		List<BookLoanEntity> bookLoanEntities = 
-				bookLoanEntityRepository.findByMember_MemberId(memberId);
-		if(!CollectionUtils.isEmpty(bookLoanEntities))	{
+		List<BookLoanEntity> bookLoanEntities = bookLoanEntityRepository.findByMember_MemberId(memberId);
+		if (!CollectionUtils.isEmpty(bookLoanEntities)) {
 			bookLoanDtos = bookLoanEntities.stream().map(mapToBkLnDto).collect(Collectors.toList());
 		}
 		return bookLoanDtos;
 	}
-	
+
 	private Function<BookLoanEntity, BookLoanDto> mapToBkLnDto = (entity) -> {
 		BookLoanDto dto = new BookLoanDto();
 		dto.setLoanId(entity.getLoanId());
@@ -93,37 +97,37 @@ public class BookLoanServiceImpl implements BookLoanService {
 		dto.setMemberId(null);
 		return dto;
 	};
-	
-	private void checkCanMemberBorrowBooks(Long memberId)	{
-		MembershipEntity membershipEntity =
-				membershipEntityRepository.findByMember_MemberId(memberId);
+
+	private void checkCanMemberBorrowBooks(Long memberId) {
+		MembershipEntity membershipEntity = membershipEntityRepository
+				.findByMember_MemberIdAndMembershipStatus(memberId, MembershipStatusEnum.ACTIVE);
 		Short borrowingLimit = membershipEntity.getMembershipType().getBorrowingLimit();
-		List<BookLoanEntity> nonReturnedBooks = bookLoanEntityRepository
-				.findByMember_MemberIdAndLoanStatus(memberId,BookLoanStatusEnum.ISSUED);
-		if(!CollectionUtils.isEmpty(nonReturnedBooks))	{
-			List<List<BookEntity>> entityList = nonReturnedBooks.stream()
-					.map(loan -> loan.getBooks()).collect(Collectors.toList());
-			List<BookEntity> issuedBooks = entityList.stream()
-					.flatMap(bookList -> bookList.stream()).collect(Collectors.toList());
-			if(!CollectionUtils.isEmpty(issuedBooks) && issuedBooks.size() >= borrowingLimit)	{
+		List<BookLoanEntity> nonReturnedBooks = bookLoanEntityRepository.findByMember_MemberIdAndLoanStatus(memberId,
+				BookLoanStatusEnum.ISSUED);
+		if (!CollectionUtils.isEmpty(nonReturnedBooks)) {
+			List<List<BookEntity>> entityList = nonReturnedBooks.stream().map(loan -> loan.getBooks())
+					.collect(Collectors.toList());
+			List<BookEntity> issuedBooks = entityList.stream().flatMap(bookList -> bookList.stream())
+					.collect(Collectors.toList());
+			if (!CollectionUtils.isEmpty(issuedBooks) && issuedBooks.size() >= borrowingLimit) {
 				throw new LmsException("Member borrowing limit reached!");
 			}
 		}
 	}
-	
-	private void checkSelectedBooksAvailableToBorrow(List<BookDto> books)	{
+
+	private void checkSelectedBooksAvailableToBorrow(List<BookDto> books) {
 		List<Long> bookIds = books.stream().map(book -> book.getBookId()).collect(Collectors.toList());
 		List<BookEntity> bookEntities = bookEntityRepository.findBooksByBookIds(bookIds);
-		if(!CollectionUtils.isEmpty(bookEntities)) {
+		if (CollectionUtils.isEmpty(bookEntities)) {
 			throw new UserInputException("no books found with the given book ids!");
 		}
-		if(bookEntities.size() != bookIds.size())	{
+		if (bookEntities.size() != bookIds.size()) {
 			throw new UserInputException("few invalid book ids are received!");
 		}
 		books.stream().forEach(bookDto -> {
-			BookEntity bookEntity = bookEntities.stream().filter(entity ->
-							entity.getBookId() == bookDto.getBookId()).findAny().get();
-			if(bookEntity.getNoOfAvailableCopies() == 0)	{
+			BookEntity bookEntity = bookEntities.stream().filter(entity -> entity.getBookId() == bookDto.getBookId())
+					.findAny().get();
+			if (bookEntity.getNoOfAvailableCopies() == 0) {
 				throw new LmsException("No copies available for book " + bookEntity.getBookId());
 			}
 		});

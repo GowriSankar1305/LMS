@@ -6,4 +6,5 @@ import com.boot.lms.entity.MembershipTypeEntity;
 
 public interface MembershipTypeRepository extends JpaRepository<MembershipTypeEntity, Long>{
 	MembershipTypeEntity findByMembershipTypeId(Long membershipTypeId);
+	MembershipTypeEntity findByMembershipType(String membershipType);
 }

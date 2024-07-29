@@ -6,12 +6,13 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
 import com.boot.lms.dto.AddressDto;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.MemberDto;
 import com.boot.lms.entity.AddressEntity;
 import com.boot.lms.entity.AppUserEntity;
@@ -25,17 +26,18 @@ import com.boot.lms.util.ThreadLocalUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
-	private final MemberEntityRepository memberEntityRepository;
+	@Autowired
+	private MemberEntityRepository memberEntityRepository;
 	
 	@Override
-	public ApiResponse saveOrUpdateUser(MemberDto memberDto) {
+	public ApiResponseDto saveOrUpdateUser(MemberDto memberDto) {
 		return Objects.nonNull(memberDto.getMemberId()) ? updateMember(memberDto) : saveMember(memberDto);
 	}
 	
-	private ApiResponse saveMember(MemberDto memberDto)	{
+	private ApiResponseDto saveMember(MemberDto memberDto)	{
 		Long principalId = (Long)ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		MemberEntity memberEntity = new MemberEntity();
 		AppUserEntity appUserEntity = new AppUserEntity();
@@ -70,10 +72,10 @@ public class MemberServiceImpl implements MemberService {
 		memberEntity.setLastName(memberDto.getLastName());
 		memberEntity.setMobileNo(memberDto.getMobileNo());
 		memberEntityRepository.save(memberEntity);
-		return new ApiResponse("Member added successfully!", 200);
+		return new ApiResponseDto("Member added successfully!", 200);
 	}
 	
-	private ApiResponse updateMember(MemberDto memberDto)	{
+	private ApiResponseDto updateMember(MemberDto memberDto)	{
 		Long principalId = (Long)ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		MemberEntity memberEntity = memberEntityRepository.findByMemberId(memberDto.getMemberId());
 		if(Objects.isNull(memberEntity))	{
@@ -101,7 +103,7 @@ public class MemberServiceImpl implements MemberService {
 			memberEntity.setAddress(addressEntity);
 		}
 		memberEntityRepository.save(memberEntity);
-		return new ApiResponse("Member updated sucessfully!", 200);
+		return new ApiResponseDto("Member updated sucessfully!", 200);
 	}
 
 	@Override

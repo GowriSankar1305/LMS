@@ -34,12 +34,12 @@ public class BookReservationEntity extends TimeStampEntity {
 	@SequenceGenerator(name = "res_id_gen",allocationSize = 1,initialValue = AppConstants
 	.INITIAL_VALUE,schema = AppConstants.DB_SCHEMA,sequenceName = "seq_book_reservation")
 	private Long reservationId;
-	@OneToMany(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
-	@JoinTable(name="tbl_reserved_books",
+	@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+	@JoinTable(name="tbl_reserved_books",schema = AppConstants.DB_SCHEMA,
 			joinColumns = {@JoinColumn(name = "reservation_id")},
 			inverseJoinColumns = {@JoinColumn(name = "book_id")})
 	private List<BookEntity> books;
-	@OneToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	@JoinColumn(name = "book_id")
 	private MemberEntity member;
 	private LocalDate reservationDate;

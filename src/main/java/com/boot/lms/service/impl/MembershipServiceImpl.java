@@ -1,20 +1,29 @@
 package com.boot.lms.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
+import com.boot.lms.dto.FromDateDto;
 import com.boot.lms.dto.MembershipDto;
 import com.boot.lms.dto.MembershipTypeDto;
+import com.boot.lms.dto.ToDateDto;
+import com.boot.lms.entity.MemberEntity;
 import com.boot.lms.entity.MembershipEntity;
 import com.boot.lms.entity.MembershipTypeEntity;
+import com.boot.lms.enums.MembershipStatusEnum;
+import com.boot.lms.enums.MembershipTimelineEnum;
 import com.boot.lms.enums.PaymentTypeEnum;
 import com.boot.lms.exception.UserInputException;
 import com.boot.lms.repository.MemberEntityRepository;
@@ -27,22 +36,28 @@ import com.boot.lms.util.ThreadLocalUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class MembershipServiceImpl implements MembershipService {
 
-	private final MembershipTypeRepository membershipTypeRepository;
-	private final MemberEntityRepository memberEntityRepository;
-	private final MembershipEntityRepository membershipEntityRepository;
+	@Autowired
+	private MembershipTypeRepository membershipTypeRepository;
+	@Autowired
+	private MemberEntityRepository memberEntityRepository;
+	@Autowired
+	private MembershipEntityRepository membershipEntityRepository;
 	
 	@Override
-	public ApiResponse createMemberShipType(MembershipTypeDto mstDto) {
+	public ApiResponseDto createMemberShipType(MembershipTypeDto mstDto) {
+		if(Objects.nonNull(membershipTypeRepository.findByMembershipType(mstDto.getMembershipType())))	{
+			throw new UserInputException("Membership type already exists!");
+		}
 		MembershipTypeEntity membershipTypeEntity = new MembershipTypeEntity();
 		membershipTypeEntity.setBorrowingLimit(mstDto.getBorrowingLimit());
 		membershipTypeEntity.setCost(LmsUtility.parseAmount(mstDto.getCost()));
 		membershipTypeEntity.setMembershipType(mstDto.getMembershipType().toUpperCase());
-		membershipTypeEntity.setTimelineDays(mstDto.getTimelineDays());
+		membershipTypeEntity.setTimelineLimit(mstDto.getTimelineLimit());
 		membershipTypeRepository.save(membershipTypeEntity);
-		return new ApiResponse("Membership type created successfully!", 200);
+		return new ApiResponseDto("Membership type created successfully!", 200);
 	}
 
 	@Override
@@ -60,36 +75,82 @@ public class MembershipServiceImpl implements MembershipService {
 		dto.setBorrowingLimit(entity.getBorrowingLimit());
 		dto.setCost(entity.getCost().toString());
 		dto.setMembershipType(entity.getMembershipType());
-		dto.setTimelineDays(entity.getTimelineDays());
+		dto.setTimelineLimit(entity.getTimelineLimit());
 		return dto;
 	};
 
 	@Override
-	public ApiResponse addLibraryMembership(MembershipDto membershipDto) {
+	public ApiResponseDto addLibraryMembership(MembershipDto membershipDto) {
+		PaymentTypeEnum paymentTypeEnum = null;
+		MemberEntity memberEntity = memberEntityRepository.findByMemberId(membershipDto.getMemberId());
+		MembershipTypeEntity membershipTypeEntity = membershipTypeRepository
+				.findByMembershipTypeId(membershipDto.getMemberShipTypeId());
+		if(Objects.isNull(memberEntity))	{
+			throw new UserInputException("Invalid member id!");
+		}
+		if(Objects.isNull(membershipTypeEntity))	{
+			throw new UserInputException("Invalid membership type!");
+		}
+		try	{
+			paymentTypeEnum = PaymentTypeEnum.valueOf(membershipDto.getPaymentType());
+		}
+		catch(Exception e)	{
+			throw new UserInputException("Invalid payment type!");
+		}
+		
 		Long principalId = (Long)ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		MembershipEntity membershipEntity = new MembershipEntity();
+		setMembershipdates(membershipEntity,membershipTypeEntity);
 		membershipEntity.setAmountPaid(LmsUtility.parseAmount(membershipDto.getAmountPaid()));
-		membershipEntity.setMember(memberEntityRepository
-				.findByMemberId(membershipDto.getMemberId()));
+		membershipEntity.setMember(memberEntity);
 		membershipEntity.setIsMembershipActive(Boolean.TRUE);
-		membershipEntity.setMembershipType(membershipTypeRepository
-				.findByMembershipTypeId(membershipDto.getMemberShipTypeId()));
-		membershipEntity.setPaymentType(PaymentTypeEnum.valueOf(membershipDto.getPaymentType()));
-		membershipEntity.setFromDate(membershipDto.getFromDate());
-		membershipEntity.setToDate(membershipDto.getToDate());
+		membershipEntity.setMembershipType(membershipTypeEntity);
+		membershipEntity.setPaymentType(paymentTypeEnum);
 		membershipEntity.setCreatedBy(principalId);
 		membershipEntity.setModifiedBy(principalId);
 		membershipEntity.setCreatedTime(LocalDateTime.now());
 		membershipEntity.setModifiedTime(LocalDateTime.now());
 		membershipEntityRepository.save(membershipEntity);
-		return new ApiResponse("Membership added successfully!", 200);
+		return new ApiResponseDto("Membership added successfully!", 200);
 	}
 
+	private void setMembershipdates(MembershipEntity membershipEntity,MembershipTypeEntity membershipTypeEntity)	{
+		MembershipTimelineEnum membershipTimeline = membershipTypeEntity.getMembershipTimeline();
+		Short timeLineLimit = membershipTypeEntity.getTimelineLimit();
+		LocalDate fromDate = LocalDate.now();
+		LocalDate toDate = LocalDate.now();
+		if(membershipTimeline.equals(MembershipTimelineEnum.MONTHS))	{
+			for(short months = 0 ; months < timeLineLimit ; months++)	{
+					toDate = toDate.plusDays(30l);
+			}
+		}
+		else if(membershipTimeline.equals(MembershipTimelineEnum.WEEKS))	{
+			for(short weeks = 0 ; weeks < timeLineLimit ; weeks++)	{
+				toDate = toDate.plusDays(7l);
+			}
+		}
+		else if(membershipTimeline.equals(MembershipTimelineEnum.YEARS))	{
+			for(short years = 0 ; years < timeLineLimit ; years++)	{
+				toDate = toDate.plusDays(365l);
+			}
+		}
+		membershipEntity.setFromDate(fromDate);
+		membershipEntity.setToDate(toDate);
+	}
+	
 	private Function<MembershipEntity, MembershipDto> mapToMspDto = (entity) -> {
 		MembershipDto membershipDto = new MembershipDto();
 		membershipDto.setAmountPaid(entity.getAmountPaid().toString());
-		membershipDto.setFromDate(entity.getFromDate());
-		membershipDto.setToDate(entity.getToDate());
+		FromDateDto fromDateDto = new FromDateDto();
+		fromDateDto.setDay(entity.getFromDate().getDayOfMonth());
+		fromDateDto.setMonth(entity.getFromDate().getMonthValue());
+		fromDateDto.setYear(entity.getFromDate().getYear());
+		ToDateDto toDateDto = new ToDateDto();
+		toDateDto.setDay(entity.getToDate().getDayOfMonth());
+		toDateDto.setMonth(entity.getToDate().getMonthValue());
+		toDateDto.setYear(entity.getToDate().getYear());
+		membershipDto.setFromDate(fromDateDto);
+		membershipDto.setToDate(toDateDto);
 		membershipDto.setIsMembershipActive(entity.getIsMembershipActive());
 		membershipDto.setMemberId(entity.getMember().getMemberId());
 		membershipDto.setMemberShipType(entity.getMembershipType().getMembershipType());
@@ -106,12 +167,12 @@ public class MembershipServiceImpl implements MembershipService {
 	}
 
 	@Override
-	public List<MembershipDto> fetchMembershipDetailsByMemberId(Long memberId) {
-		List<MembershipDto> membershipDtos = null;
-		List<MembershipEntity> membershipEntities = membershipEntityRepository.findAll();
-		if(!CollectionUtils.isEmpty(membershipEntities))	{
-			membershipDtos = membershipEntities.stream().map(mapToMspDto).collect(Collectors.toList());
+	public MembershipDto fetchActiveMembershipByMemberId(Long memberId) {
+		MembershipEntity membershipEntity = membershipEntityRepository
+				.findByMember_MemberIdAndMembershipStatus(memberId,MembershipStatusEnum.ACTIVE);
+		if(Objects.isNull(membershipEntity))	{
+			throw new UserInputException("Invalid member id!");
 		}
-		return membershipDtos;
+		return mapToMspDto.apply(membershipEntity);
 	}
 }

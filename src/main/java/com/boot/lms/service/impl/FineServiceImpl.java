@@ -6,11 +6,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.FineDto;
 import com.boot.lms.dto.PaymentDateDto;
 import com.boot.lms.entity.BookLoanEntity;
@@ -28,35 +29,58 @@ import com.boot.lms.util.LmsUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class FineServiceImpl implements FineService {
 
-	private final FineEntityRepository fineEntityRepository;
-	private final BookLoanEntityRepository bookLoanEntityRepository;
-	private final MemberEntityRepository memberEntityRepository;
+	@Autowired
+	private FineEntityRepository fineEntityRepository;
+	@Autowired
+	private BookLoanEntityRepository bookLoanEntityRepository;
+	@Autowired
+	private MemberEntityRepository memberEntityRepository;
 	
 	@Override
 	@Transactional
-	public ApiResponse addFine(FineDto fineDto) {
+	public ApiResponseDto addFine(FineDto fineDto) {
 		BookLoanEntity bookLoanEntity = bookLoanEntityRepository.findByLoanId(fineDto.getLoanId());
 		MemberEntity memberEntity = memberEntityRepository.findByMemberId(fineDto.getMemberId());
+		FineTypeEnum fineTypeEnum = null;
+		PaymentTypeEnum paymentTypeEnum = null;
+		LocalDate paymentDate = null;
 		if(Objects.isNull(memberEntity))	{
 			throw new UserInputException("Invalid member id!");
 		}
 		if(Objects.isNull(bookLoanEntity))	{
 			throw new UserInputException("Invalid book loan id!");
 		}
+		try	{
+			fineTypeEnum = FineTypeEnum.valueOf(fineDto.getFineType());
+		}
+		catch(Exception e)	{
+			throw new UserInputException("Invalid fine type!");
+		}
+		try	{
+			paymentTypeEnum = PaymentTypeEnum.valueOf(fineDto.getFineType());
+		}
+		catch(Exception e)	{
+			throw new UserInputException("Invalid payment type!");
+		}
+		
+		PaymentDateDto paymentDateDto = fineDto.getPaymentDateDto();
+		paymentDate = LocalDate.of(paymentDateDto.getYear()
+				, paymentDateDto.getMonth(), paymentDateDto.getDay());
+		if(paymentDate.compareTo(LocalDate.now()) > 0)	{
+			throw new UserInputException("Invalid payment date!");
+		}
 		FineEntity fineEntity = new FineEntity();
 		fineEntity.setAmount(LmsUtility.parseAmount(fineDto.getAmount()));
 		fineEntity.setBookLoan(bookLoanEntity);
-		fineEntity.setFineType(FineTypeEnum.valueOf(fineDto.getFineType()));
+		fineEntity.setFineType(fineTypeEnum);
 		fineEntity.setMember(memberEntity);
-		PaymentDateDto paymentDateDto = fineDto.getPaymentDateDto();
-		fineEntity.setPaymentDate(LocalDate.of(paymentDateDto.getYear()
-				, paymentDateDto.getMonth(), paymentDateDto.getDay()));
-		fineEntity.setPaymentType(PaymentTypeEnum.valueOf(fineDto.getFineType()));
+		fineEntity.setPaymentDate(paymentDate);
+		fineEntity.setPaymentType(paymentTypeEnum);
 		fineEntityRepository.save(fineEntity);
-		return new ApiResponse("Fine details added successfully!", 200);
+		return new ApiResponseDto("Fine details added successfully!", 200);
 	}
 
 	@Override

@@ -8,11 +8,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.AuthorDto;
 import com.boot.lms.dto.BookDto;
 import com.boot.lms.dto.PublishedDateDto;
@@ -27,20 +28,30 @@ import com.boot.lms.util.ThreadLocalUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class BookServiceImpl implements BookService {
 
-	private final BookCategoryEntiyRepository bookCategoryEntiyRepository;
-	private final BookEntityRepository bookEntityRepository;
+	@Autowired
+	private BookCategoryEntiyRepository bookCategoryEntiyRepository;
+	@Autowired
+	private BookEntityRepository bookEntityRepository;
 	
 	@Override
-	public ApiResponse addBook(BookDto bookDto) {
+	public ApiResponseDto addBook(BookDto bookDto) {
 		if(Objects.isNull(bookDto))	{
 			throw new UserInputException("Invalid book information received!");
 		}
 		Long principalId = (Long)ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		BookEntity bookEntity = new BookEntity();
 		bookEntity.setBookCategory(bookCategoryEntiyRepository.findById(bookDto.getCategoryId()).get());
+		if(Objects.nonNull(bookDto.getPublishedDate()))	{
+			PublishedDateDto date = bookDto.getPublishedDate();
+			LocalDate publishedDate = LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
+			if(publishedDate.compareTo(LocalDate.now()) > 0)	{
+				throw new UserInputException("Invalid published date!");
+			}
+			bookEntity.setPublishedDate(publishedDate);
+		}
 		if(!CollectionUtils.isEmpty(bookDto.getAuthors()))	{
 			List<AuthorEntity> authorEntityList = new ArrayList<>();
 			for(AuthorDto dto : bookDto.getAuthors())	{
@@ -63,12 +74,8 @@ public class BookServiceImpl implements BookService {
 		bookEntity.setIsbn(bookDto.getIsbn());
 		bookEntity.setNoOfAvailableCopies(bookDto.getNoOfAvailableCopies());
 		bookEntity.setNoOfPages(bookDto.getNoOfPages());
-		if(Objects.nonNull(bookDto.getPublishedDate()))	{
-			PublishedDateDto date = bookDto.getPublishedDate();
-			bookEntity.setPublishedDate(LocalDate.of(date.getYear(), date.getMonth(), date.getDay()));
-		}
 		bookEntityRepository.save(bookEntity);
-		return new ApiResponse("Book added successfully!", 200);
+		return new ApiResponseDto("Book added successfully!", 200);
 	}
 
 	@Override

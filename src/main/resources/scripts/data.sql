@@ -1,0 +1,2 @@
+insert into lms_schema.tbl_app_user values ((select nextval('lms_schema.seq_app_user')),1,(select LOCALTIMESTAMP),1,(select LOCALTIMESTAMP),true,'admin123','admin','ADMIN');
+insert into lms_schema.tbl_admin values (900,1,(select LOCALTIMESTAMP),1,(select LOCALTIMESTAMP),'admin@gmail.com','admin','garu','9848022338',1001);

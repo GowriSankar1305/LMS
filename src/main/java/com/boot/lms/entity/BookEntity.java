@@ -34,8 +34,8 @@ public class BookEntity extends TimeStampEntity {
 	@Column(unique = true)
 	private String isbn;
 	private String bookTitle;
-	@ManyToMany(mappedBy = "books",cascade = CascadeType.MERGE)
-	@JoinTable(name = "tbl_book_author",
+	@ManyToMany(cascade = CascadeType.ALL)
+	@JoinTable(name = "tbl_book_author",schema = AppConstants.DB_SCHEMA,
 	joinColumns = {@JoinColumn(name ="book_id")},
 	inverseJoinColumns = {@JoinColumn(name = "author_id")})
 	private List<AuthorEntity> authors;
@@ -46,7 +46,7 @@ public class BookEntity extends TimeStampEntity {
 	private String bookDescription;
 	private Boolean isAvailable;
 	private Integer noOfAvailableCopies;
-	@OneToOne(cascade = CascadeType.MERGE)
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "category_id")
 	private BookCategoryEntiy bookCategory;
 }

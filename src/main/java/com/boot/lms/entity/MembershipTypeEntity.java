@@ -3,9 +3,12 @@ package com.boot.lms.entity;
 import java.math.BigDecimal;
 
 import com.boot.lms.constants.AppConstants;
+import com.boot.lms.enums.MembershipTimelineEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,7 +30,9 @@ public class MembershipTypeEntity {
 	private Long membershipTypeId;
 	@Column(unique = true)
 	private String membershipType;
-	private Short timelineDays;
+	private Short timelineLimit;
 	private Short borrowingLimit;
 	private BigDecimal cost;
+	@Enumerated(EnumType.STRING)
+	private MembershipTimelineEnum membershipTimeline;
 }

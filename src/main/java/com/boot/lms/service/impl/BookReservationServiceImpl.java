@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.BookReservationDto;
 import com.boot.lms.dto.DateDto;
 import com.boot.lms.dto.ReservationDateDto;
@@ -26,15 +27,18 @@ import com.boot.lms.util.ThreadLocalUtility;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class BookReservationServiceImpl implements BookReservationService {
 
-	private final BookReservationEntityRepository bookReservationEntityRepository;
-	private final MemberEntityRepository memberEntityRepository;
-	private final BookEntityRepository bookEntityRepository;
+	@Autowired
+	private BookReservationEntityRepository bookReservationEntityRepository;
+	@Autowired
+	private MemberEntityRepository memberEntityRepository;
+	@Autowired
+	private BookEntityRepository bookEntityRepository;
 
 	@Override
-	public ApiResponse reserveBooks(BookReservationDto bookReservationDto) {
+	public ApiResponseDto reserveBooks(BookReservationDto bookReservationDto) {
 		Long principalId = (Long) ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		BookReservationEntity bookReservationEntity = new BookReservationEntity();
 		bookReservationEntity.setCreatedBy(principalId);
@@ -52,7 +56,7 @@ public class BookReservationServiceImpl implements BookReservationService {
 			bookReservationEntity.setBooks(bookEntities);
 		}
 		bookReservationEntityRepository.save(bookReservationEntity);
-		return new ApiResponse("Books reserved successfully!", 200);
+		return new ApiResponseDto("Books reserved successfully!", 200);
 	}
 
 	@Override

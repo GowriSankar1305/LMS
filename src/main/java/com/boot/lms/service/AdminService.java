@@ -1,8 +1,8 @@
 package com.boot.lms.service;
 
 import com.boot.lms.dto.AdminDto;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 
 public interface AdminService {
-	public ApiResponse saveAdmin(AdminDto adminDto);
+	public ApiResponseDto saveAdmin(AdminDto adminDto);
 }

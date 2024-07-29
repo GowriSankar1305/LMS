@@ -4,6 +4,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -11,9 +14,13 @@ import lombok.Data;
 public class BookLoanDto {
 
 	private Long loanId;
-	private List<BookDto> books;
+	@NotEmpty
+	private List<@Valid BookDto> books;
+	@NotNull
 	private Long memberId;
+	@Valid
 	private IssuedDateDto issuedDate;
+	@Valid
 	private ReturnedDateDto returnedDate;
 	private String loanStatus;
 }

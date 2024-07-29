@@ -2,11 +2,12 @@ package com.boot.lms.service.impl;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.boot.lms.dto.AdminDto;
-import com.boot.lms.dto.ApiResponse;
+import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.entity.AdminEntity;
 import com.boot.lms.entity.AppUserEntity;
 import com.boot.lms.enums.RoleEnum;
@@ -16,14 +17,15 @@ import com.boot.lms.service.AdminService;
 import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
+//@AllArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
-	private final AdminEntityRepository adminEntityRepository;
+	@Autowired
+	private AdminEntityRepository adminEntityRepository;
 	
 	@Override
 	@Transactional
-	public ApiResponse saveAdmin(AdminDto adminDto) {
+	public ApiResponseDto saveAdmin(AdminDto adminDto) {
 		AdminEntity adminEntity = new AdminEntity();
 		adminEntity.setCreatedBy(1l);
 		adminEntity.setCreatedTime(LocalDateTime.now());
@@ -44,6 +46,6 @@ public class AdminServiceImpl implements AdminService {
 		appUserEntity.setModifiedTime(LocalDateTime.now());
 		adminEntity.setAppUser(appUserEntity);
 		adminEntityRepository.save(adminEntity);
-		return new ApiResponse("Admin saved successfully!", 200);
+		return new ApiResponseDto("Admin saved successfully!", 200);
 	}
 }

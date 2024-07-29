@@ -33,10 +33,10 @@ public class MemberEntity extends TimeStampEntity {
 	private String mobileNo;
 	@Column(unique = true)
 	private String emailId;
-	@OneToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	@JoinColumn(name = "app_user_id")
 	private AppUserEntity appUser;
-	@OneToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	@JoinColumn(name = "address_id")
 	private AddressEntity address;
 }

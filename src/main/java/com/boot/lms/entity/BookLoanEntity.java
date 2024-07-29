@@ -34,12 +34,12 @@ public class BookLoanEntity extends TimeStampEntity {
 	@SequenceGenerator(name = "book_loa_id_gen",allocationSize = 1,initialValue = 
 	AppConstants.INITIAL_VALUE,schema = AppConstants.DB_SCHEMA,sequenceName = "seq_book_loan")
 	private Long loanId;
-	@OneToMany(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
-	@JoinTable(name = "tbl_borrowed_books",
+	@OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+	@JoinTable(name = "tbl_borrowed_books",schema = AppConstants.DB_SCHEMA,
 		joinColumns = {@JoinColumn(name = "loan_id")},
 		inverseJoinColumns =  {@JoinColumn(name = "book_id")})
 	private List<BookEntity> books;
-	@ManyToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private MemberEntity member;
 	private LocalDate issuedDate;

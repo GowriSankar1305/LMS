@@ -2,6 +2,7 @@ package com.boot.lms.entity;
 
 import com.boot.lms.constants.AppConstants;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,5 +22,6 @@ public class BookCategoryEntiy extends TimeStampEntity {
 	@SequenceGenerator(name = "cat_id_gen",allocationSize = 1,initialValue = AppConstants
 	.INITIAL_VALUE,sequenceName = "seq_book_category",schema = AppConstants.DB_SCHEMA)
 	private Long categoryId;
+	@Column(unique = true)
 	private String categoryName;
 }

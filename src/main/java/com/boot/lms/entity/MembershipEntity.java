@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.boot.lms.constants.AppConstants;
+import com.boot.lms.enums.MembershipStatusEnum;
 import com.boot.lms.enums.PaymentTypeEnum;
 
 import jakarta.persistence.CascadeType;
@@ -44,4 +45,6 @@ public class MembershipEntity extends TimeStampEntity {
 	private BigDecimal amountPaid;
 	@Enumerated(EnumType.STRING)
 	private PaymentTypeEnum paymentType;
+	@Enumerated(EnumType.STRING)
+	private MembershipStatusEnum membershipStatus;
 }
