@@ -13,24 +13,31 @@ import org.springframework.util.CollectionUtils;
 import com.boot.lms.constants.AppConstants;
 import com.boot.lms.dto.AddressDto;
 import com.boot.lms.dto.ApiResponseDto;
+import com.boot.lms.dto.EMailMessageDto;
 import com.boot.lms.dto.MemberDto;
 import com.boot.lms.entity.AddressEntity;
 import com.boot.lms.entity.AppUserEntity;
 import com.boot.lms.entity.MemberEntity;
 import com.boot.lms.enums.RoleEnum;
 import com.boot.lms.exception.UserInputException;
+import com.boot.lms.repository.AdminEntityRepository;
 import com.boot.lms.repository.MemberEntityRepository;
+import com.boot.lms.service.EmailService;
 import com.boot.lms.service.MemberService;
 import com.boot.lms.util.ThreadLocalUtility;
 
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
-//@AllArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
 	@Autowired
 	private MemberEntityRepository memberEntityRepository;
+	@Autowired
+	private AdminEntityRepository adminEntityRepository;
+	@Autowired
+	private EmailService emailService;
 	
 	@Override
 	public ApiResponseDto saveOrUpdateUser(MemberDto memberDto) {
@@ -153,5 +160,16 @@ public class MemberServiceImpl implements MemberService {
 		MemberDto memberDto = mapToMemberDto.apply(memberEntity);
 		memberDto.setAddress(mapToAddressDto.apply(memberEntity.getAddress()));
 		return memberDto;
+	}
+
+	@Override
+	public ApiResponseDto sendEmailToAdmin(EMailMessageDto emailMessageDto) {
+		if(Objects.isNull(adminEntityRepository.findByAdminId(emailMessageDto.getEmailReceiverId())))	{
+			throw new UserInputException("Cannot send email. Invalid receiver id!");
+		}
+		Long senderId = (Long) ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
+		log.info("Current logged in member---> {}",senderId);
+		emailMessageDto.setEmailSenderId(senderId);
+		return emailService.sendEmail(emailMessageDto);
 	}
 }

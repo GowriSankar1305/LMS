@@ -13,12 +13,14 @@ import com.boot.lms.dto.ApiResponseDto;
 import com.boot.lms.dto.BookDto;
 import com.boot.lms.dto.BookLoanDto;
 import com.boot.lms.dto.BookReservationDto;
+import com.boot.lms.dto.EMailMessageDto;
 import com.boot.lms.dto.FineDto;
 import com.boot.lms.dto.MembershipDto;
 import com.boot.lms.service.BookLoanService;
 import com.boot.lms.service.BookReservationService;
 import com.boot.lms.service.BookService;
 import com.boot.lms.service.FineService;
+import com.boot.lms.service.MemberService;
 import com.boot.lms.service.MembershipService;
 
 import jakarta.validation.Valid;
@@ -35,6 +37,7 @@ public class MemberController {
 	private final MembershipService membershipService;
 	private final BookService bookService;
 	private final BookLoanService bookLoanService;
+	private final MemberService memberService;
 	
 	@PostMapping("books/reserve")
 	public ApiResponseDto reserveBooks(@RequestBody @Valid BookReservationDto bookReservationDto)	{
@@ -89,5 +92,10 @@ public class MemberController {
 	@PostMapping("books/loans/find")
 	public List<BookLoanDto> findMemberBookLoans(@RequestParam(required =  true) Long memberId)	{
 		return bookLoanService.fetchBookLoansOfAMember(memberId);
+	}
+	
+	@PostMapping("email/send")
+	public ApiResponseDto sendEmail(@RequestBody @Valid EMailMessageDto eMailMessageDto)	{
+		return memberService.sendEmailToAdmin(eMailMessageDto);
 	}
 }

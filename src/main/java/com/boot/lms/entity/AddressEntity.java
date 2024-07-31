@@ -2,7 +2,6 @@ package com.boot.lms.entity;
 
 import com.boot.lms.constants.AppConstants;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,11 +22,9 @@ public class AddressEntity extends TimeStampEntity {
 	@SequenceGenerator(name = "addrs_id_gen",schema = AppConstants.DB_SCHEMA,
 	sequenceName = "seq_address",allocationSize = 1,initialValue = AppConstants.INITIAL_VALUE)
 	private Long addressId;
-	@Column(columnDefinition = "varchar(1000)")
 	private String landmark;
 	private String city;
 	private String state;
 	private String pincode;
-	@Column(columnDefinition = "varchar(1000)")
 	private String addressLine;
 }

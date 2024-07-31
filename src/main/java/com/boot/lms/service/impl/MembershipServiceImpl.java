@@ -2,8 +2,6 @@ package com.boot.lms.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -33,10 +31,10 @@ import com.boot.lms.service.MembershipService;
 import com.boot.lms.util.LmsUtility;
 import com.boot.lms.util.ThreadLocalUtility;
 
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
-//@AllArgsConstructor
+@Slf4j
 public class MembershipServiceImpl implements MembershipService {
 
 	@Autowired
@@ -110,6 +108,7 @@ public class MembershipServiceImpl implements MembershipService {
 		membershipEntity.setModifiedBy(principalId);
 		membershipEntity.setCreatedTime(LocalDateTime.now());
 		membershipEntity.setModifiedTime(LocalDateTime.now());
+		membershipEntity.setMembershipStatus(MembershipStatusEnum.ACTIVE);
 		membershipEntityRepository.save(membershipEntity);
 		return new ApiResponseDto("Membership added successfully!", 200);
 	}
@@ -140,6 +139,7 @@ public class MembershipServiceImpl implements MembershipService {
 	
 	private Function<MembershipEntity, MembershipDto> mapToMspDto = (entity) -> {
 		MembershipDto membershipDto = new MembershipDto();
+		membershipDto.setMembershipId(entity.getMembershipId());
 		membershipDto.setAmountPaid(entity.getAmountPaid().toString());
 		FromDateDto fromDateDto = new FromDateDto();
 		fromDateDto.setDay(entity.getFromDate().getDayOfMonth());
@@ -174,5 +174,22 @@ public class MembershipServiceImpl implements MembershipService {
 			throw new UserInputException("Invalid member id!");
 		}
 		return mapToMspDto.apply(membershipEntity);
+	}
+
+	@Override
+	public ApiResponseDto updateMembershipStatus(MembershipDto membershipDto) {
+		ApiResponseDto apiResponseDto = new ApiResponseDto();
+		int result = membershipEntityRepository.updateMembershipStatus(membershipDto.getMembershipId(),
+				membershipDto.getIsMembershipActive(), MembershipStatusEnum.valueOf(membershipDto.getMembershipStatus()));
+		log.info("no of rows effected by the query----> {}",result);
+		if(result == 1)	{
+			apiResponseDto.setMessage("Membership status updated successfully!");
+			apiResponseDto.setStatus(200);
+		}
+		else	{
+			apiResponseDto.setMessage("Not able to modify Membership status!");
+			apiResponseDto.setStatus(500);
+		}
+		return apiResponseDto;
 	}
 }

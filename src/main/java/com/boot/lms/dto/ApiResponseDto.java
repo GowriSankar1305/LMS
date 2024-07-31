@@ -12,4 +12,8 @@ public class ApiResponseDto {
 		this.message = message;
 		this.status = status;
 	}
+	
+	public ApiResponseDto() {
+		
+	}
 }

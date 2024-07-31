@@ -12,4 +12,5 @@ public interface MembershipService {
 	public ApiResponseDto addLibraryMembership(MembershipDto membershipDto);
 	public MembershipDto fetchMembershipDetails(Long membershipId);
 	public MembershipDto fetchActiveMembershipByMemberId(Long memberId);
+	public ApiResponseDto updateMembershipStatus(MembershipDto membershipDto);
 }

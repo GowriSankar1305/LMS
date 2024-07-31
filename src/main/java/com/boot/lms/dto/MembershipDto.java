@@ -27,4 +27,5 @@ public class MembershipDto {
 	private Long memberId;
 	@NotBlank
 	private String paymentType;
+	private String membershipStatus;
 }

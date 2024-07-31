@@ -42,7 +42,6 @@ public class BookEntity extends TimeStampEntity {
 	private LocalDate publishedDate;
 	private Integer noOfPages;
 	private String coverImage;
-	@Column(columnDefinition = "varchar(1000)")
 	private String bookDescription;
 	private Boolean isAvailable;
 	private Integer noOfAvailableCopies;
