@@ -29,10 +29,7 @@ import com.boot.lms.repository.MembershipEntityRepository;
 import com.boot.lms.service.BookLoanService;
 import com.boot.lms.util.ThreadLocalUtility;
 
-import lombok.AllArgsConstructor;
-
 @Service
-//@AllArgsConstructor
 public class BookLoanServiceImpl implements BookLoanService {
 
 	@Autowired

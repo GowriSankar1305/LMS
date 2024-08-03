@@ -23,6 +23,7 @@ import com.boot.lms.service.BookReservationService;
 import com.boot.lms.service.BookService;
 import com.boot.lms.service.FineService;
 import com.boot.lms.service.MembershipService;
+import com.boot.lms.util.LmsUtility;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,7 @@ public class AdminController {
 	private final FineService fineService;
 	private final MembershipService membershipService;
 	private final AdminService adminService;
+	private final LmsUtility lmsUtility;
 	
 	@PostMapping("books/addBook")
 	public ApiResponseDto addBookToLibrary(@RequestBody @Valid BookDto bookDto)	{
@@ -62,6 +64,7 @@ public class AdminController {
 	
 	@PostMapping("books/loan")
 	public ApiResponseDto loanBooksToMember(@RequestBody @Valid BookLoanDto bookLoanDto)	{
+		lmsUtility.refreshMemershipStatus(bookLoanDto.getMemberId());
 		return bookLoanService.issueBooksLoan(bookLoanDto);
 	}
 	

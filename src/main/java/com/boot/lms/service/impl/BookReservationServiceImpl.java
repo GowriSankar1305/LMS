@@ -24,10 +24,7 @@ import com.boot.lms.repository.MemberEntityRepository;
 import com.boot.lms.service.BookReservationService;
 import com.boot.lms.util.ThreadLocalUtility;
 
-import lombok.AllArgsConstructor;
-
 @Service
-//@AllArgsConstructor
 public class BookReservationServiceImpl implements BookReservationService {
 
 	@Autowired
@@ -50,9 +47,8 @@ public class BookReservationServiceImpl implements BookReservationService {
 				LocalDate.of(reservationDate.getYear(), reservationDate.getMonth(), reservationDate.getDay()));
 		bookReservationEntity.setStatus(ReservationStatusEnum.valueOf(bookReservationDto.getReservationStatus()));
 		bookReservationEntity.setMember(memberEntityRepository.findByMemberId(bookReservationDto.getMemberId()));
-		if (!CollectionUtils.isEmpty(bookReservationDto.getBooks())) {
-			List<BookEntity> bookEntities = bookEntityRepository.findBooksByBookIds(
-					bookReservationDto.getBooks().stream().map(book -> book.getBookId()).collect(Collectors.toList()));
+		if (!CollectionUtils.isEmpty(bookReservationDto.getBookIds())) {
+			List<BookEntity> bookEntities = bookEntityRepository.findBooksByBookIds(bookReservationDto.getBookIds());
 			bookReservationEntity.setBooks(bookEntities);
 		}
 		bookReservationEntityRepository.save(bookReservationEntity);

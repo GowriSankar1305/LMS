@@ -49,6 +49,15 @@ public class LmsExceptionHandler {
 		return errorMap;
 	}
 	
+	@ExceptionHandler(Exception.class)
+	@ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
+	public Map<String, String> handleException(Exception e)	{
+		log.error(e.getMessage());
+		Map<String, String> errorMap = new HashMap<>();
+		errorMap.put("error", "Unable to process your request. Some system error has occured!");
+		return errorMap;
+	}
+	
 	@ResponseStatus(code = HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	public Map<String, Object> handleRequestParamError(MissingServletRequestParameterException ex)	{

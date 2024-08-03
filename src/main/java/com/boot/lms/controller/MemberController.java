@@ -22,6 +22,7 @@ import com.boot.lms.service.BookService;
 import com.boot.lms.service.FineService;
 import com.boot.lms.service.MemberService;
 import com.boot.lms.service.MembershipService;
+import com.boot.lms.util.LmsUtility;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -38,9 +39,11 @@ public class MemberController {
 	private final BookService bookService;
 	private final BookLoanService bookLoanService;
 	private final MemberService memberService;
+	private final LmsUtility lmsUtility;
 	
 	@PostMapping("books/reserve")
 	public ApiResponseDto reserveBooks(@RequestBody @Valid BookReservationDto bookReservationDto)	{
+		lmsUtility.refreshMemershipStatus(bookReservationDto.getMemberId());
 		return bookReservationService.reserveBooks(bookReservationDto);
 	}
 	
