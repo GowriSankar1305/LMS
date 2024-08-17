@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.boot.lms.constants.AppConstants;
@@ -23,12 +24,13 @@ import com.boot.lms.exception.UserInputException;
 import com.boot.lms.repository.BookCategoryEntiyRepository;
 import com.boot.lms.repository.BookEntityRepository;
 import com.boot.lms.service.BookService;
+import com.boot.lms.util.LmsUtility;
 import com.boot.lms.util.ThreadLocalUtility;
 
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
-//@AllArgsConstructor
 public class BookServiceImpl implements BookService {
 
 	@Autowired
@@ -37,13 +39,16 @@ public class BookServiceImpl implements BookService {
 	private BookEntityRepository bookEntityRepository;
 	
 	@Override
+	@Transactional
 	public ApiResponseDto addBook(BookDto bookDto) {
+		log.info("book request data-------> {}",bookDto);
 		if(Objects.isNull(bookDto))	{
 			throw new UserInputException("Invalid book information received!");
 		}
 		Long principalId = (Long)ThreadLocalUtility.get().get(AppConstants.PRINCIPAL_ID);
 		BookEntity bookEntity = new BookEntity();
 		bookEntity.setBookCategory(bookCategoryEntiyRepository.findById(bookDto.getCategoryId()).get());
+		log.info("published date-----> {}",bookDto.getPublishedDate());
 		if(Objects.nonNull(bookDto.getPublishedDate()))	{
 			PublishedDateDto date = bookDto.getPublishedDate();
 			LocalDate publishedDate = LocalDate.of(date.getYear(), date.getMonth(), date.getDay());
@@ -60,6 +65,9 @@ public class BookServiceImpl implements BookService {
 				authorEntity.setModifiedBy(principalId);
 				authorEntity.setFirstName(dto.getFirstName());
 				authorEntity.setLastName(dto.getLastName());
+				authorEntity.setAuthorBio(dto.getAuthorBio());
+				authorEntity.setCreatedTime(LocalDateTime.now());
+				authorEntity.setModifiedTime(LocalDateTime.now());
 				authorEntityList.add(authorEntity);
 			}
 			bookEntity.setAuthors(authorEntityList);
@@ -74,11 +82,13 @@ public class BookServiceImpl implements BookService {
 		bookEntity.setIsbn(bookDto.getIsbn());
 		bookEntity.setNoOfAvailableCopies(bookDto.getNoOfAvailableCopies());
 		bookEntity.setNoOfPages(bookDto.getNoOfPages());
+		bookEntity.setBookPrice(LmsUtility.parseAmount(bookDto.getBookPrice()));
 		bookEntityRepository.save(bookEntity);
 		return new ApiResponseDto("Book added successfully!", 200);
 	}
 
 	@Override
+	@Transactional
 	public BookDto fetchBookById(Long bookId) {
 		BookDto bookDto = null;
 		BookEntity bookEntity = bookEntityRepository.findByBookId(bookId);
@@ -121,11 +131,16 @@ public class BookServiceImpl implements BookService {
 		bookDto.setIsbn(entity.getIsbn());
 		bookDto.setNoOfAvailableCopies(entity.getNoOfAvailableCopies());
 		bookDto.setNoOfPages(entity.getNoOfPages());
-		PublishedDateDto publishedDateDto = new PublishedDateDto();
-		publishedDateDto.setDay(entity.getPublishedDate().getDayOfMonth());
-		publishedDateDto.setMonth(entity.getPublishedDate().getMonthValue());
-		publishedDateDto.setYear(entity.getPublishedDate().getYear());
-		bookDto.setPublishedDate(publishedDateDto);
+		if(Objects.nonNull(entity.getPublishedDate()))	{
+			PublishedDateDto publishedDateDto = new PublishedDateDto();
+			publishedDateDto.setDay(entity.getPublishedDate().getDayOfMonth());
+			publishedDateDto.setMonth(entity.getPublishedDate().getMonthValue());
+			publishedDateDto.setYear(entity.getPublishedDate().getYear());
+			bookDto.setPublishedDate(publishedDateDto);
+		}
+		bookDto.setBookPrice(entity.getBookPrice().toString());
+		bookDto.setBookCategory(entity.getBookCategory().getCategoryName());
+		bookDto.setCategoryId(entity.getBookCategory().getCategoryId());
 		return bookDto;
 	};
 	

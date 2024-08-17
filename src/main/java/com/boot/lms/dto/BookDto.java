@@ -3,6 +3,8 @@ package com.boot.lms.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -13,6 +15,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = "book")
 public class BookDto {
 	private Long bookId;
 	@NotBlank
@@ -32,6 +35,9 @@ public class BookDto {
 	@NotNull
 	private Long categoryId;
 	@NotEmpty
+	@JsonProperty(value = "bookAuthors")
 	private List<@Valid AuthorDto> authors;
 	private String bookCategory;
+	@NotBlank
+	private String bookPrice;
 }

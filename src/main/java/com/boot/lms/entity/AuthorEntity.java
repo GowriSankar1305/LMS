@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.boot.lms.constants.AppConstants;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,9 +26,11 @@ public class AuthorEntity extends TimeStampEntity {
 	@SequenceGenerator(name = "author_id_gen",sequenceName = "seq_author",allocationSize = 1
 	,initialValue = AppConstants.INITIAL_VALUE,schema = AppConstants.DB_SCHEMA)
 	private Long authorId;
-	private Long firstName;
-	private Long lastName;
+	private String firstName;
+	private String lastName;
 	private String authorImage;
+	@Column(length = 1000)
+	private String authorBio;
 	@ManyToMany(mappedBy = "authors")
 	private List<BookEntity> books;
 }

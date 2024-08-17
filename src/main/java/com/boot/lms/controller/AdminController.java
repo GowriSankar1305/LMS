@@ -10,24 +10,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boot.lms.dto.ApiResponseDto;
+import com.boot.lms.dto.BookCategoryDto;
 import com.boot.lms.dto.BookDto;
 import com.boot.lms.dto.BookLoanDto;
 import com.boot.lms.dto.BookReservationDto;
 import com.boot.lms.dto.EMailMessageDto;
 import com.boot.lms.dto.FineDto;
+import com.boot.lms.dto.MemberDto;
 import com.boot.lms.dto.MembershipDto;
 import com.boot.lms.dto.MembershipTypeDto;
 import com.boot.lms.service.AdminService;
+import com.boot.lms.service.BookCategoryService;
 import com.boot.lms.service.BookLoanService;
 import com.boot.lms.service.BookReservationService;
 import com.boot.lms.service.BookService;
 import com.boot.lms.service.FineService;
+import com.boot.lms.service.MemberService;
 import com.boot.lms.service.MembershipService;
 import com.boot.lms.util.LmsUtility;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping("/admin/")
@@ -41,6 +47,18 @@ public class AdminController {
 	private final MembershipService membershipService;
 	private final AdminService adminService;
 	private final LmsUtility lmsUtility;
+	private final BookCategoryService bookCategoryService;
+	private final MemberService memberService;
+	
+	@PostMapping("book/category/add")
+	public ApiResponseDto addBookCategory(@RequestBody @Valid BookCategoryDto bookCategoryDto)	{
+		return bookCategoryService.addBookCategory(bookCategoryDto.getCategoryName().toUpperCase());
+	}
+	
+	@PostMapping("book/categories/find")
+	public List<BookCategoryDto> getBookCategories()	{
+		return bookCategoryService.fetchBookCategories();
+	}
 	
 	@PostMapping("books/addBook")
 	public ApiResponseDto addBookToLibrary(@RequestBody @Valid BookDto bookDto)	{
@@ -110,6 +128,7 @@ public class AdminController {
 	
 	@PostMapping("library/membershipType")
 	public ApiResponseDto addMembershipType(@RequestBody @Valid MembershipTypeDto membershipTypeDto)	{
+		log.info(" ---------- adding new mbsp type ------------------");
 		return membershipService.createMemberShipType(membershipTypeDto);
 	}
 	
@@ -121,6 +140,21 @@ public class AdminController {
 	@PostMapping("library/member/membership")
 	public ApiResponseDto addLibraryMembership(@RequestBody @Valid MembershipDto membershipDto)	{
 		return membershipService.addLibraryMembership(membershipDto);
+	}
+	
+	@PostMapping("library/member/add")
+	public ApiResponseDto addMemberToLibrary(@RequestBody @Valid MemberDto memberDto)	{
+		return memberService.saveOrUpdateUser(memberDto);
+	}
+	
+	@PostMapping("library/member/find")
+	public MemberDto findMemberById(@RequestParam Long memberId)	{
+		return memberService.fetchMemberById(memberId);
+	}
+	
+	@PostMapping("library/members/find")
+	public List<MemberDto> findMembersOfLibrary(@RequestParam Boolean status)	{
+		return memberService.fetchMembers(status);
 	}
 	
 	@PostMapping("member/membership/find")

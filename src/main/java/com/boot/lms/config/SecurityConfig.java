@@ -1,6 +1,7 @@
 package com.boot.lms.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,11 +29,13 @@ public class SecurityConfig {
 	private JWTFilter jwtFilter;
 	@Autowired
 	private UserDetailsService userDetailsService;
+	@Value("${lms.open.routes}")
+	private String[] openRoutes;
 	
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception	{
 		http.authorizeHttpRequests(authorizeRequests -> {
-			authorizeRequests.requestMatchers("/lms/validateUser").permitAll();
+			authorizeRequests.requestMatchers(openRoutes).permitAll();
 			authorizeRequests.requestMatchers("/admin/**").hasAuthority(RoleEnum.ADMIN.name());
 			authorizeRequests.requestMatchers("/member/**").hasAuthority(RoleEnum.MEMBER.name());
 			authorizeRequests.requestMatchers("/**").authenticated();

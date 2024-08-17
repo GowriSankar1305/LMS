@@ -1,5 +1,14 @@
 package com.boot.lms.controller;
 
+import java.time.Month;
+import java.time.Year;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.boot.lms.dto.AppUserDto;
@@ -49,5 +59,24 @@ public class LmsController {
 		loginResponseDto.setUserId(appUserDto.getAppUserId());
 		loginResponseDto.setUserName(appUserDto.getUserName());
 		return loginResponseDto;
+	}
+	
+	@PostMapping("yearsAndMonths")
+	public Map<String, List<?>> getYearsAndMonths()	{
+		Map<String, List<?>> timelineMap = new HashMap<>();
+		timelineMap.put("months", Stream.of(Month.values())
+				.map(month -> month.name()).collect(Collectors.toList()));
+		timelineMap.put("years", IntStream.range(1930, Year.now()
+				.getValue() + 1).boxed().collect(Collectors.toList()));
+		return timelineMap;
+	}
+	
+	@PostMapping("fetchDays")
+	public Map<String, List<Integer>> 
+	populateDaysByMnth(@RequestParam(required = true) Integer month)	{
+		Map<String, List<Integer>> daysMap = new HashMap<>();
+		daysMap.put("days", IntStream.range(1, Month.of(month).length(Year.now().isLeap()) + 1)
+				.boxed().collect(Collectors.toList()));
+		return daysMap;
 	}
 }

@@ -18,4 +18,6 @@ public class MembershipTypeDto {
 	private Short borrowingLimit;
 	@NotBlank
 	private String cost;
+	@NotBlank
+	private String membershipTimeline;
 }

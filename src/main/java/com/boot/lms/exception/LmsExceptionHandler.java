@@ -30,6 +30,7 @@ public class LmsExceptionHandler {
 	@ExceptionHandler(value = MethodArgumentNotValidException.class)
 	@ResponseStatus(code = HttpStatus.BAD_REQUEST)
 	public Map<String, Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException me)	{
+		log.error("validation failed-----> {}",me);
 		Map<String, Object> errorMap = new HashMap<>();
 		errorMap.put("errors", me.getFieldErrors().stream()
 				.map(mapToErrorMsg).collect(Collectors.toList()));
@@ -37,12 +38,13 @@ public class LmsExceptionHandler {
 	}
 	
 	private Function<FieldError, String> mapToErrorMsg = (error) -> {
-		return error.getDefaultMessage();
+		return error.getField() + " " + error.getDefaultMessage();
 	};
 	
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
 	public Map<String, String> handleRunTimeException(RuntimeException re)	{
+		log.error("exception------> {}",re);
 		log.error(re.getMessage());
 		Map<String, String> errorMap = new HashMap<>();
 		errorMap.put("error", "Unable to process your request. Problem at our end!");

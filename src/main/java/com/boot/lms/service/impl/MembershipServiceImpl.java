@@ -46,6 +46,7 @@ public class MembershipServiceImpl implements MembershipService {
 	
 	@Override
 	public ApiResponseDto createMemberShipType(MembershipTypeDto mstDto) {
+		log.info("mbspDto-------> {}",mstDto.toString());
 		if(Objects.nonNull(membershipTypeRepository.findByMembershipType(mstDto.getMembershipType())))	{
 			throw new UserInputException("Membership type already exists!");
 		}
@@ -54,6 +55,8 @@ public class MembershipServiceImpl implements MembershipService {
 		membershipTypeEntity.setCost(LmsUtility.parseAmount(mstDto.getCost()));
 		membershipTypeEntity.setMembershipType(mstDto.getMembershipType().toUpperCase());
 		membershipTypeEntity.setTimelineLimit(mstDto.getTimelineLimit());
+		membershipTypeEntity.setMembershipTimeline(MembershipTimelineEnum.valueOf(mstDto.getMembershipTimeline()));
+		log.info("mbsp timeline type---------> {}",membershipTypeEntity.getMembershipTimeline());
 		membershipTypeRepository.save(membershipTypeEntity);
 		return new ApiResponseDto("Membership type created successfully!", 200);
 	}
@@ -74,6 +77,8 @@ public class MembershipServiceImpl implements MembershipService {
 		dto.setCost(entity.getCost().toString());
 		dto.setMembershipType(entity.getMembershipType());
 		dto.setTimelineLimit(entity.getTimelineLimit());
+		dto.setMembershipTimeline(entity.getMembershipTimeline().name());
+		dto.setMembershipTypeId(entity.getMembershipTypeId());
 		return dto;
 	};
 

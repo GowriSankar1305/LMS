@@ -1,5 +1,6 @@
 package com.boot.lms.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import com.boot.lms.constants.AppConstants;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,7 +36,7 @@ public class BookEntity extends TimeStampEntity {
 	@Column(unique = true)
 	private String isbn;
 	private String bookTitle;
-	@ManyToMany(cascade = CascadeType.ALL)
+	@ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	@JoinTable(name = "tbl_book_author",schema = AppConstants.DB_SCHEMA,
 	joinColumns = {@JoinColumn(name ="book_id")},
 	inverseJoinColumns = {@JoinColumn(name = "author_id")})
@@ -45,7 +47,8 @@ public class BookEntity extends TimeStampEntity {
 	private String bookDescription;
 	private Boolean isAvailable;
 	private Integer noOfAvailableCopies;
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
 	@JoinColumn(name = "category_id")
 	private BookCategoryEntiy bookCategory;
+	private BigDecimal bookPrice;
 }
